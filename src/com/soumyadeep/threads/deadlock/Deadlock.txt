@@ -1,0 +1,235 @@
+Deadlock in Java Example
+
+Deadlock in java is a programming situation where two or more threads are blocked forever. Java deadlock situation arises with at least two threads and two or more resources. Here I have written a simple program that will cause java deadlock scenario and then we will see how to analyze it.
+
+Deadlock in Java
+deadlock in java, java thread deadlock
+
+Let’s have a look at a simple program where I will create deadlock in java threads.
+
+
+package com.journaldev.threads;
+
+public class ThreadDeadlock {
+
+    public static void main(String[] args) throws InterruptedException {
+        Object obj1 = new Object();
+        Object obj2 = new Object();
+        Object obj3 = new Object();
+    
+        Thread t1 = new Thread(new SyncThread(obj1, obj2), "t1");
+        Thread t2 = new Thread(new SyncThread(obj2, obj3), "t2");
+        Thread t3 = new Thread(new SyncThread(obj3, obj1), "t3");
+        
+        t1.start();
+        Thread.sleep(5000);
+        t2.start();
+        Thread.sleep(5000);
+        t3.start();
+        
+    }
+
+}
+
+class SyncThread implements Runnable{
+    private Object obj1;
+    private Object obj2;
+
+    public SyncThread(Object o1, Object o2){
+        this.obj1=o1;
+        this.obj2=o2;
+    }
+    @Override
+    public void run() {
+        String name = Thread.currentThread().getName();
+        System.out.println(name + " acquiring lock on "+obj1);
+        synchronized (obj1) {
+         System.out.println(name + " acquired lock on "+obj1);
+         work();
+         System.out.println(name + " acquiring lock on "+obj2);
+         synchronized (obj2) {
+            System.out.println(name + " acquired lock on "+obj2);
+            work();
+        }
+         System.out.println(name + " released lock on "+obj2);
+        }
+        System.out.println(name + " released lock on "+obj1);
+        System.out.println(name + " finished execution.");
+    }
+    private void work() {
+        try {
+            Thread.sleep(30000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+In above program SyncThread is implementing Runnable interface and it works on two Objects by acquiring lock on each one of them one by one using synchronized block.
+
+In main method, I have three threads running for SyncThread and there is a shared resource between each of the threads. The threads are run in such a way that it will be able to acquire lock on the first object but when it’s trying to acquire lock on second object, it goes on wait state because it’s already locked by another thread. This forms a cyclic dependency for resource between Threads causing deadlock.
+
+When I execute the above program, here is the output generated but program never terminates because of deadlock in java threads.
+
+
+
+t1 acquiring lock on java.lang.Object@6d9dd520
+t1 acquired lock on java.lang.Object@6d9dd520
+t2 acquiring lock on java.lang.Object@22aed3a5
+t2 acquired lock on java.lang.Object@22aed3a5
+t3 acquiring lock on java.lang.Object@218c2661
+t3 acquired lock on java.lang.Object@218c2661
+t1 acquiring lock on java.lang.Object@22aed3a5
+t2 acquiring lock on java.lang.Object@218c2661
+t3 acquiring lock on java.lang.Object@6d9dd520
+Here we can clearly identify the deadlock situation from the output but in real life applications it’s very hard to find the deadlock situation and debug them.
+
+How to Detect Deadlock in Java
+To detect a deadlock in java, we need to look at the java thread dump of the application, in last post I explained how we can generate thread dump using VisualVM profiler or using jstack utility.
+
+Here is the thread dump of above program.
+
+
+
+2012-12-27 19:08:34
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (23.5-b02 mixed mode):
+
+"Attach Listener" daemon prio=5 tid=0x00007fb0a2814000 nid=0x4007 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"DestroyJavaVM" prio=5 tid=0x00007fb0a2801000 nid=0x1703 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"t3" prio=5 tid=0x00007fb0a204b000 nid=0x4d07 waiting for monitor entry [0x000000015d971000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at com.journaldev.threads.SyncThread.run(ThreadDeadlock.java:41)
+	- waiting to lock <0x000000013df2f658> (a java.lang.Object)
+	- locked <0x000000013df2f678> (a java.lang.Object)
+	at java.lang.Thread.run(Thread.java:722)
+
+"t2" prio=5 tid=0x00007fb0a1073000 nid=0x4207 waiting for monitor entry [0x000000015d209000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at com.journaldev.threads.SyncThread.run(ThreadDeadlock.java:41)
+	- waiting to lock <0x000000013df2f678> (a java.lang.Object)
+	- locked <0x000000013df2f668> (a java.lang.Object)
+	at java.lang.Thread.run(Thread.java:722)
+
+"t1" prio=5 tid=0x00007fb0a1072000 nid=0x5503 waiting for monitor entry [0x000000015d86e000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at com.journaldev.threads.SyncThread.run(ThreadDeadlock.java:41)
+	- waiting to lock <0x000000013df2f668> (a java.lang.Object)
+	- locked <0x000000013df2f658> (a java.lang.Object)
+	at java.lang.Thread.run(Thread.java:722)
+
+"Service Thread" daemon prio=5 tid=0x00007fb0a1038000 nid=0x5303 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread1" daemon prio=5 tid=0x00007fb0a1037000 nid=0x5203 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread0" daemon prio=5 tid=0x00007fb0a1016000 nid=0x5103 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Signal Dispatcher" daemon prio=5 tid=0x00007fb0a4003000 nid=0x5003 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Finalizer" daemon prio=5 tid=0x00007fb0a4800000 nid=0x3f03 in Object.wait() [0x000000015d0c0000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x000000013de75798> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:135)
+	- locked <0x000000013de75798> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:151)
+	at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:177)
+
+"Reference Handler" daemon prio=5 tid=0x00007fb0a4002000 nid=0x3e03 in Object.wait() [0x000000015cfbd000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x000000013de75320> (a java.lang.ref.Reference$Lock)
+	at java.lang.Object.wait(Object.java:503)
+	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:133)
+	- locked <0x000000013de75320> (a java.lang.ref.Reference$Lock)
+
+"VM Thread" prio=5 tid=0x00007fb0a2049800 nid=0x3d03 runnable 
+
+"GC task thread#0 (ParallelGC)" prio=5 tid=0x00007fb0a300d800 nid=0x3503 runnable 
+
+"GC task thread#1 (ParallelGC)" prio=5 tid=0x00007fb0a2001800 nid=0x3603 runnable 
+
+"GC task thread#2 (ParallelGC)" prio=5 tid=0x00007fb0a2003800 nid=0x3703 runnable 
+
+"GC task thread#3 (ParallelGC)" prio=5 tid=0x00007fb0a2004000 nid=0x3803 runnable 
+
+"GC task thread#4 (ParallelGC)" prio=5 tid=0x00007fb0a2005000 nid=0x3903 runnable 
+
+"GC task thread#5 (ParallelGC)" prio=5 tid=0x00007fb0a2005800 nid=0x3a03 runnable 
+
+"GC task thread#6 (ParallelGC)" prio=5 tid=0x00007fb0a2006000 nid=0x3b03 runnable 
+
+"GC task thread#7 (ParallelGC)" prio=5 tid=0x00007fb0a2006800 nid=0x3c03 runnable 
+
+"VM Periodic Task Thread" prio=5 tid=0x00007fb0a1015000 nid=0x5403 waiting on condition 
+
+JNI global references: 114
+
+
+Found one Java-level deadlock:
+=============================
+"t3":
+  waiting to lock monitor 0x00007fb0a1074b08 (object 0x000000013df2f658, a java.lang.Object),
+  which is held by "t1"
+"t1":
+  waiting to lock monitor 0x00007fb0a1010f08 (object 0x000000013df2f668, a java.lang.Object),
+  which is held by "t2"
+"t2":
+  waiting to lock monitor 0x00007fb0a1012360 (object 0x000000013df2f678, a java.lang.Object),
+  which is held by "t3"
+
+Java stack information for the threads listed above:
+===================================================
+"t3":
+	at com.journaldev.threads.SyncThread.run(ThreadDeadlock.java:41)
+	- waiting to lock <0x000000013df2f658> (a java.lang.Object)
+	- locked <0x000000013df2f678> (a java.lang.Object)
+	at java.lang.Thread.run(Thread.java:722)
+"t1":
+	at com.journaldev.threads.SyncThread.run(ThreadDeadlock.java:41)
+	- waiting to lock <0x000000013df2f668> (a java.lang.Object)
+	- locked <0x000000013df2f658> (a java.lang.Object)
+	at java.lang.Thread.run(Thread.java:722)
+"t2":
+	at com.journaldev.threads.SyncThread.run(ThreadDeadlock.java:41)
+	- waiting to lock <0x000000013df2f678> (a java.lang.Object)
+	- locked <0x000000013df2f668> (a java.lang.Object)
+	at java.lang.Thread.run(Thread.java:722)
+
+Found 1 deadlock.
+The thread dump output clearly shows the deadlock situation and threads and resources involved causing deadlock situation.
+
+For analyzing deadlock, we need to look out for the threads with state as BLOCKED and then the resources it’s waiting to lock. Every resource has a unique ID using which we can find which thread is already holding the lock on the object. For example Thread “t3” is waiting to lock 0x000000013df2f658 but it’s already locked by thread “t1”.
+
+Once we analyze the deadlock situation and found out the threads which are causing deadlock, we need to make code changes to avoid deadlock situation.
+
+How to avoid deadlock in java
+These are some of the guidelines using which we can avoid most of the deadlock situations.
+
+Avoid Nested Locks: This is the most common reason for deadlocks, avoid locking another resource if you already hold one. It’s almost impossible to get deadlock situation if you are working with only one object lock. For example, here is the another implementation of run() method without nested lock and program runs successfully without deadlock situation.
+
+    public void run() {
+        String name = Thread.currentThread().getName();
+        System.out.println(name + " acquiring lock on " + obj1);
+        synchronized (obj1) {
+            System.out.println(name + " acquired lock on " + obj1);
+            work();
+        }
+        System.out.println(name + " released lock on " + obj1);
+        System.out.println(name + " acquiring lock on " + obj2);
+        synchronized (obj2) {
+            System.out.println(name + " acquired lock on " + obj2);
+            work();
+        }
+        System.out.println(name + " released lock on " + obj2);
+
+        System.out.println(name + " finished execution.");
+    }
+Lock Only What is Required: You should acquire lock only on the resources you have to work on, for example in above program I am locking the complete Object resource but if we are only interested in one of it’s fields, then we should lock only that specific field not complete object.
+Avoid waiting indefinitely: You can get deadlock if two threads are waiting for each other to finish indefinitely using thread join. If your thread has to wait for another thread to finish, it’s always best to use join with maximum time you want to wait for thread to finish.

@@ -1,0 +1,100 @@
+Java FutureTask Example Program
+
+Sometime back I wrote a post about Java Callable Future interfaces that we can use to get the concurrent processing benefits of threads as well as they are capable of returning value to the calling program.
+
+FutureTask is base concrete implementation of Future interface and provides asynchronous processing. It contains the methods to start and cancel a task and also methods that can return the state of the FutureTask as whether it’s completed or cancelled. We need a callable object to create a future task and then we can use Java Thread Pool Executor to process these asynchronously.
+
+Let’s see the example of FutureTask with a simple program.
+
+Since FutureTask requires a callable object, we will create a simple Callable implementation.
+
+
+package com.journaldev.threads;
+
+import java.util.concurrent.Callable;
+
+public class MyCallable implements Callable<String> {
+
+	private long waitTime;
+	
+	public MyCallable(int timeInMillis){
+		this.waitTime=timeInMillis;
+	}
+	@Override
+	public String call() throws Exception {
+		Thread.sleep(waitTime);
+        //return the thread name executing this callable task
+        return Thread.currentThread().getName();
+	}
+
+}
+Here is an example of FutureTask method and it’s showing commonly used methods of FutureTask.
+
+
+
+package com.journaldev.threads;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+public class FutureTaskExample {
+
+	public static void main(String[] args) {
+		MyCallable callable1 = new MyCallable(1000);
+		MyCallable callable2 = new MyCallable(2000);
+
+		FutureTask<String> futureTask1 = new FutureTask<String>(callable1);
+		FutureTask<String> futureTask2 = new FutureTask<String>(callable2);
+
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+		executor.execute(futureTask1);
+		executor.execute(futureTask2);
+		
+		while (true) {
+			try {
+				if(futureTask1.isDone() && futureTask2.isDone()){
+					System.out.println("Done");
+					//shut down executor service
+					executor.shutdown();
+					return;
+				}
+				
+				if(!futureTask1.isDone()){
+				//wait indefinitely for future task to complete
+				System.out.println("FutureTask1 output="+futureTask1.get());
+				}
+				
+				System.out.println("Waiting for FutureTask2 to complete");
+				String s = futureTask2.get(200L, TimeUnit.MILLISECONDS);
+				if(s !=null){
+					System.out.println("FutureTask2 output="+s);
+				}
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}catch(TimeoutException e){
+				//do nothing
+			}
+		}
+		
+	}
+
+}
+When we run above program, you will notice that it doesn’t print anything for sometime because get() method of FutureTask waits for the task to get completed and then returns the output object. There is an overloaded method also to wait for only specified amount of time and we are using it for futureTask2. Also notice the use of isDone() method to make sure program gets terminated once all the tasks are executed.
+
+
+Output of above program will be:
+
+
+FutureTask1 output=pool-1-thread-1
+Waiting for FutureTask2 to complete
+Waiting for FutureTask2 to complete
+Waiting for FutureTask2 to complete
+Waiting for FutureTask2 to complete
+Waiting for FutureTask2 to complete
+FutureTask2 output=pool-1-thread-2
+Done
+As such there is no benefit of FutureTask but it comes handy when we want to override some of Future interface methods and don’t want to implement every method of Future interface.

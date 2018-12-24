@@ -1,0 +1,105 @@
+Multithreading in Java
+
+Multithreading in Java is a very important topic. I have written a lot about Threads in Java. Java Thread is a lightweight process that executes some task. Java provides multithreading support with the Thread class and an application can create multiple threads executing concurrently.
+
+Table of Contents [hide]
+
+1 Multithreading in Java
+2 Threads in Java
+2.1 Java Thread Example
+2.2 Java Thread Sleep
+2.3 Java Thread Join
+2.4 Java Thread States
+2.5 Java Thread wait, notify and notifyAll
+2.6 Java Thread Safety and Java Synchronization
+2.7 Java Exception in thread main
+2.8 Thread Safety in Singleton Class
+2.9 Daemon Thread in Java
+2.10 Java Thread Local
+2.11 Java Thread Dump
+2.12 How to Analyze Deadlock and avoid it in Java
+2.13 Java Timer Thread
+2.14 Java Producer Consumer Problem
+2.15 Java Thread Pool
+2.16 Java Callable Future
+2.17 Java FutureTask Example
+Multithreading in Java
+multithreading in java, threads in java, java multithreading
+
+There are two types of threads in an application – user thread and daemon thread. When we start an application, main is the first user thread created and we can create multiple user threads as well as daemon threads. When all the user threads are executed, JVM terminates the program.
+
+We can set different priorities to different Threads but it doesn’t guarantee that higher priority thread will execute first than lower priority thread. Thread scheduler is the part of Operating System implementation and when a Thread is started, it’s execution is controlled by Thread Scheduler and JVM doesn’t have any control on it’s execution.
+
+We can create Threads by either implementing Runnable interface or by extending Thread Class.
+
+
+Thread t = new Thread(new Runnable(){
+    @Override
+    public void run() {
+    }
+});
+Above is a one liner statement to create new Thread, Here we are creating Runnable as Anonymous Class, read this post to learn about inner class, nested class and anonymous inner class.
+
+
+In last few weeks, I have posted some useful articles on multithreading in java, you can follow them in order to learn about Threads in Java.
+
+Threads in Java
+java thread, multithreading in java, threads in java
+
+With Java 8 lambda expressions, we can create Thread in java like below too because Runnable is a functional interface.
+
+
+
+Thread t = new Thread(() -> {System.out.println("My Runnable");});
+t.start();
+Java Thread Example
+This is the first post in the multithreading in java tutorial series. Read this to learn about Process and Thread. What is the difference between Thread and Process. Benefits of using Threads and how we can create Threads using Runnable interface and Thread class. This post also compares Runnable interface with Thread class.
+
+Java Thread Sleep
+Java Thread sleep is used to pause the execution of current thread. We will use Thread sleep extensively in future posts, so it’s good to know how it works and is it accurate or not?
+
+Java Thread Join
+Sometimes we need to wait for other threads to finish it’s execution before we can proceed. We can achieve this using Thread join, learn how it works and when we should use it.
+
+Java Thread States
+Understanding different states of thread is important. Learn how thread changes it’s state and how thread scheduler changes thread state.
+
+Java Thread wait, notify and notifyAll
+Java Object class contains three methods using which threads can communicate about the lock status of a resource. Learn with example usage of these Object class methods in a simple Wait-Notify implementation.
+
+Java Thread Safety and Java Synchronization
+We know that Threads share Object resources, it can lead to data corruption because these operations are not atomic. Learn how we can achieve thread safety in java using different methods. Read this post to learn about the correct usage of synchronization, synchronized methods and synchronized blocks.
+There are various examples of synchronized usage and the post explains what are the issues with them.
+
+Java Exception in thread main
+JVM creates first thread using main method. This post explains about some common exceptions we see in daily life and what is the root cause of them and how to fix them.
+
+Thread Safety in Singleton Class
+In this article, you will learn basic concepts of creating Singleton class. What are thread safety issues with different implementation. How we can achieve thread safety in Singleton class.
+
+Daemon Thread in Java
+A simple article explaining about daemon threads and how we can create daemon threads in java.
+
+Java Thread Local
+We know that threads share Object’s variables but what if we want to have thread-local variables created at class level. Java provides ThreadLocal utility class to create thread-local variables. Read more to learn about how we can create ThreadLocal variables in java program.
+
+Java Thread Dump
+Java Thread dump provides the current threads information for the program. Java Thread dump provides useful information to analyze performance issues with the application. You can use thread dump to find and fix deadlock situations. This post explains different methods that can be used to generate thread dump in java.
+
+How to Analyze Deadlock and avoid it in Java
+Deadlock is a situation where multiple threads are waiting for each other to release resources causing cyclic dependency. This article discusses about the situation in which we can get deadlock in a java program. How we can use Thread dump to find the deadlock and best practices to avoid deadlock in java program.
+
+Java Timer Thread
+This post explains how we can use Java Timer and TimerTask classes to create jobs to run at scheduled interval, an example program showing it’s usage and how we can cancel the timer.
+
+Java Producer Consumer Problem
+Before Java 5, producer-consumer problem can be solved using wait() and notify() methods but introduction of BlockingQueue has made it very easy. Learn how we can use BlockingQueue to solve producer consumer problem in java.
+
+Java Thread Pool
+Java Thread Pool is a collection of worker threads waiting to process jobs. Java 5 introduction of Executor framework has made it very easy to create thread pool in java using Executors and ThreadPoolExecutor classes. Learn how to use them to create thread pool in java.
+
+Java Callable Future
+Sometimes we wish Thread could return values that we can use. Java 5 Callable can be used in that case that is similar as Runnable interface. We can use Executor framework to execute Callable tasks.
+
+Java FutureTask Example
+FutureTask class is the base concrete class that implements Future interface. We use it with Callable implementation and Executors for asynchronous processing. FutureTask provide implementation methods to check the state of the task and return the value to the calling program once it’s processing is finished. It comes handy when you want to override some of the implementation methods of the Future interface.

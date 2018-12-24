@@ -1,0 +1,100 @@
+Thread Safety in Java Singleton Classes with Example Code
+
+Singleton is one of the most widely used creational design pattern to restrict the object creation by applications. In real world applications, resources like Database connections or Enterprise Information Systems (EIS) are limited and should be used wisely to avoid any resource crunch. To achieve this, we can implement Singleton design pattern to create a wrapper class around the resource and limit the number of object created at runtime to one.
+
+Thread Safe Singleton in Java
+thread safe singleton, thread safe singleton in java
+In general we follow below steps to create a singleton class:
+
+Override the private constructor to avoid any new object creation with new operator.
+Declare a private static instance of the same class
+Provide a public static method that will return the singleton class instance variable. If the variable is not initialized then initialize it or else simply return the instance variable.
+Using above steps I have created a singleton class that looks like below:
+
+ASingleton.java
+
+
+package com.journaldev.designpatterns;
+
+public class ASingleton {
+
+	private static ASingleton instance = null;
+
+	private ASingleton() {
+	}
+
+	public static ASingleton getInstance() {
+		if (instance == null) {
+			instance = new ASingleton();
+		}
+		return instance;
+	}
+
+}
+In the above code, getInstance() method is not thread safe. Multiple threads can access it at the same time and for the first few threads when the instance variable is not initialized, multiple threads can enters the if loop and create multiple instances and break our singleton implementation.
+
+There are three ways through which we can achieve thread safety.
+
+
+Create the instance variable at the time of class loading.
+Pros:
+
+Thread safety without synchronization
+Easy to implement
+Cons:
+
+
+Early creation of resource that might not be used in the application.
+The client application can’t pass any argument, so we can’t reuse it. For example, having a generic singleton class for database connection where client application supplies database server properties.
+Synchronize the getInstance() method
+Pros:
+
+Thread safety is guaranteed.
+Client application can pass parameters
+Lazy initialization achieved
+Cons:
+
+Slow performance because of locking overhead.
+Unnecessary synchronization that is not required once the instance variable is initialized.
+Use synchronized block inside the if loop and volatile variable
+Pros:
+
+Thread safety is guaranteed
+Client application can pass arguments
+Lazy initialization achieved
+Synchronization overhead is minimal and applicable only for first few threads when the variable is null.
+Cons:
+
+Extra if condition
+Looking at all the three ways to achieve thread safety, I think third one is the best option and in that case the modified class will look like:
+
+
+package com.journaldev.designpatterns;
+
+public class ASingleton {
+
+	private static volatile ASingleton instance;
+	private static Object mutex = new Object();
+
+	private ASingleton() {
+	}
+
+	public static ASingleton getInstance() {
+		ASingleton result = instance;
+		if (result == null) {
+			synchronized (mutex) {
+				result = instance;
+				if (result == null)
+					instance = result = new ASingleton();
+			}
+		}
+		return result;
+	}
+
+}
+Local variable result seems unnecessary. But it’s there to improve performance of our code. In cases where instance is already initialized (most of the time), the volatile field is only accessed once (due to “return result;” instead of “return instance;”). This can improve the method’s overall performance by as much as 25 percent.
+
+If you think there are better ways to achieve this or the thread safety is compromised in the above implementation, please comment and share with all of us.
+
+Update: String is not a very good candidate to be used in synchronization, so I have updated it with Object, learn more about synchronization and thread safety in java.
+
